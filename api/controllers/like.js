@@ -1,48 +1,66 @@
 import { pool } from "../db.js";
 import jwt from "jsonwebtoken";
 
-export const getLikes = (req, res) => {
-	const q = "SELECT userId FROM likes WHERE postId = ?";
+const getLikes = (req, res) => {
+	const postId = req.query.postId;
 
-	pool.query(q, [req.query.postId], (err, data) => {
-		if (err) return res.status(500).json(err);
-		return res.status(200).json(data.map(like => like.userId));
-	});
+	if (!postId) {
+		return res.status(400).json({
+			message: "postId is not found"
+		})
+	}
+
+	const likes = pool.query(`SELECT userId FROM likes WHERE postId = ($1)`, [postId])
+
+	return res.status(200).json({
+		data: likes.map(like => like.userId)
+	})
 }
 
-export const addLike = (req, res) => {
-	const token = req.cookies.accessToken;
-	if (!token) return res.status(401).json("Not logged in!");
+const addLike = (req, res) => {
+	const accessToken = req.cookies.accessToken;
+	if (!accessToken) return res.status(401).json("Not logged in!");
 
-	jwt.verify(token, "secretkey", (err, userInfo) => {
+	const { postId } = req.body;
+
+	jwt.verify(accessToken, "secretkey", async (err, userInfo) => {
 		if (err) return res.status(403).json("Token is not valid!");
 
-		const q = "INSERT INTO likes (`userId`,`postId`) VALUES (?)";
-		const values = [
-			userInfo.id,
-			req.body.postId
-		];
+		const addedLike = await pool.query(`INSERT INTO likes (userId, postId) VALUES ($1, $2) RETURNING userInfo.username`, [userInfo.id, postId])
 
-		pool.query(q, [values], (err, data) => {
-			if (err) return res.status(500).json(err);
-			return res.status(200).json("Post has been liked.");
-		});
+		if (addedLike.row[0].length == 0) {
+			return res.status(500).json({
+				message: "Error while adding like"
+			})
+		}
+
+		return res.status(200).json({
+			message: "Post has been liked"
+		})
 	});
 };
 
-export const deleteLike = (req, res) => {
+const deleteLike = (req, res) => {
+	const accessToken = req.cookies.accessToken;
+	if (!accessToken) return res.status(401).json("Not logged in!");
 
-	const token = req.cookies.accessToken;
-	if (!token) return res.status(401).json("Not logged in!");
+	const { postId } = req.query;
 
-	jwt.verify(token, "secretkey", (err, userInfo) => {
+	jwt.verify(accessToken, "secretkey", (err, userInfo) => {
 		if (err) return res.status(403).json("Token is not valid!");
 
-		const q = "DELETE FROM likes WHERE `userId` = ? AND `postId` = ?";
+		const likeToDelete = pool.query(`DELETE FROM likes WHERE userId = $1 AND postId = $2`, [userInfo.id, postId]);
 
-		pool.query(q, [userInfo.id, req.query.postId], (err, data) => {
-			if (err) return res.status(500).json(err);
-			return res.status(200).json("Post has been disliked.");
-		});
+		if (!likeToDelete) {
+			return res.status().json({
+				message: "Error while deleting the like"
+			})
+		}
+
+		return res.status(500).json({
+			message: "Post has been disliked"
+		})
 	});
 };
+
+export default { getLikes, addLike, deleteLike };

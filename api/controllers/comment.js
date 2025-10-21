@@ -1,37 +1,42 @@
 import { pool } from "../db.js";
 import jwt from "jsonwebtoken";
 import moment from "moment";
+import { add } from "nodemon/lib/rules/index.js";
 
-export const getComments = (req, res) => {
-	const q = `SELECT c.*, u.id AS userId, name, profilePic FROM comments AS c JOIN users AS u ON (u.id = c.userId)
-    WHERE c.postId = ? ORDER BY c.createdAt DESC
-    `;
+const getComments = async (req, res) => {
+	const comments = await pool.query(`SELECT c.*, u.id AS userId, name, profilePic FROM comments AS c JOIN users AS u ON (u.id = c.userId)
+    WHERE c.postId = ? ORDER BY c.createdAt DESC`);
 
-	pool.query(q, [req.query.postId], (err, data) => {
-		if (err) return res.status(500).json(err);
-		return res.status(200).json(data);
-	});
+	if (comments.rows[0].length == 0) {
+		return res.status(500).json({
+			message: "No comments found!"
+		})
+	}
+
+	return res.status(200).json(comments.rows[0].data);
 };
 
-export const addComment = (req, res) => {
-	const token = req.cookies.accessToken;
-	if (!token) return res.status(401).json("Not logged in!");
+const addComment = async (req, res) => {
+	const { desc, userInfo, postId } = req.body;
+	const accessToken = req.cookies.accessToken;
+	if (!accessToken) return res.status(401).json("Not logged in!");
 
-	jwt.verify(token, "secretkey", (err, userInfo) => {
+	jwt.verify(accessToken, "secretkey", (err, userInfo) => {
 		if (err) return res.status(403).json("Token is not valid!");
 
-		const q = "INSERT INTO comments(`desc`, `createdAt`, `userId`, `postId`) VALUES (?)";
-		const values = [
-			req.body.desc,
-			moment(Date.now()).format("YYYY-MM-DD HH:mm:ss"),
-			userInfo.id,
-			req.body.postId
-		];
+		const createdAt = moment(Date.now()).format("YYYY-MM-DD HH:mm:ss");
 
-		pool.query(q, [values], (err, data) => {
-			if (err) return res.status(500).json(err);
-			return res.status(200).json("Comment has been created.");
-		});
+		const newComment = await pool.query(`INSERT INTO comments (desc, createdAt, userId, postId) VALUES ($1, $2, $3, $4) RETURNING userInfo`, [desc, createdAt, userInfo.id, postId])
+
+		if (newComment.rows[0].length == 0) {
+			return res.status().json({
+				message: "Error adding new comment"
+			})
+		}
+
+		return res.status(200).json({
+			message: "Comment has been created"
+		})
 	});
 };
 
@@ -52,3 +57,5 @@ export const deleteComment = (req, res) => {
 		});
 	});
 };
+
+export default { getComments, deleteComment, addComment }
