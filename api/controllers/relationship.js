@@ -1,48 +1,84 @@
 import { pool } from "../db.js";
 import jwt from "jsonwebtoken";
 
-export const getRelationships = (req, res) => {
-	const q = "SELECT followerUserId FROM relationships WHERE followedUserId = ?";
+const getRelationships = async (req, res) => {
+	const followedUserId = req.query.followedUserId;
 
-	pool.query(q, [req.query.followedUserId], (err, data) => {
-		if (err) return res.status(500).json(err);
-		return res.status(200).json(data.map(relationship => relationship.followerUserId));
-	});
+	if (!followedUserId) {
+		return res.status(400).json({
+			message: "follower's userId is required"
+		})
+	}
+
+	const relationships = await pool.query(`SELECT followerUserId FROM relationships WHERE followedUserId = ($1)`, [followedUserId])
+
+	if (relationships.length) {
+		return res.status(409).json({
+			message: "Error while fetching the relationships"
+		})
+	}
+
+	return res.status(200).json(relationships(relationship => relationship.followerUserId));
 }
 
-export const addRelationship = (req, res) => {
-	const token = req.cookies.accessToken;
-	if (!token) return res.status(401).json("Not logged in!");
+const addRelationship = (req, res) => {
+	const accessToken = req.cookies.accessToken;
+	if (!accessToken) return res.status(401).json("Not logged in!");
 
-	jwt.verify(token, "secretkey", (err, userInfo) => {
+	const { userId } = req.body;
+
+	if (!userId) {
+		return res.status(400).json({
+			message: "userid is required"
+		})
+	}
+
+	jwt.verify(accessToken, "secretkey", (err, userInfo) => {
 		if (err) return res.status(403).json("Token is not valid!");
 
-		const q = "INSERT INTO relationships (`followerUserId`,`followedUserId`) VALUES (?)";
-		const values = [
-			userInfo.id,
-			req.body.userId
-		];
+		const { userId } = req.body;
 
-		pool.query(q, [values], (err, data) => {
-			if (err) return res.status(500).json(err);
-			return res.status(200).json("Following");
-		});
+		const newRelationship = pool.query(`INSERT INTO relationships (followerUserId, followedUserId) VALUES ($1)`, [userInfo.id, userId]);
+
+		if (newRelationship.rows[0].length == 0) {
+			return res.status(500).json({
+				message: "error while following the user"
+			})
+		}
+
+		return res.status(200).json({
+			message: "Following"
+		})
 	});
 };
 
-export const deleteRelationship = (req, res) => {
+const deleteRelationship = (req, res) => {
+	const accessToken = req.cookies.accessToken;
+	if (!accessToken) return res.status(401).json("Not logged in!");
 
-	const token = req.cookies.accessToken;
-	if (!token) return res.status(401).json("Not logged in!");
+	const { userId } = req.query.userId;
 
-	jwt.verify(token, "secretkey", (err, userInfo) => {
+	if (!userId) {
+		return res.status(400).json({
+			message: "userId is required"
+		})
+	}
+
+	jwt.verify(accessToken, "secretkey", (err, userInfo) => {
 		if (err) return res.status(403).json("Token is not valid!");
 
-		const q = "DELETE FROM relationships WHERE `followerUserId` = ? AND `followedUserId` = ?";
+		const relationship = pool.query(`DELETE FROM relationships WHERE followerUserId = $1 AND followedUserId = $2`, [userInfo.id, userId])
 
-		pool.query(q, [userInfo.id, req.query.userId], (err, data) => {
-			if (err) return res.status(500).json(err);
-			return res.status(200).json("Unfollow");
-		});
+		if (relationship.rows[0].length == 0) {
+			return res.status(500).json({
+				message: "error while deleting the relationship"
+			})
+		}
+
+		return res.status(200).json({
+			message: "Unfollow"
+		})
 	});
 };
+
+export default { deleteRelationship, addRelationship, getRelationships }

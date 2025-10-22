@@ -1,59 +1,81 @@
 import jwt from "jsonwebtoken";
 import moment from "moment";
-import pool from "../db.js";
+import { pool } from "../db.js";
+import { add } from "nodemon/lib/rules/index.js";
 
-export const getStories = (req, res) => {
+const getStories = (req, res) => {
+	const accessToken = req.cookies.accessToken;
+	if (!accessToken) return res.status(401).json("Not logged in!");
+
+	jwt.verify(accessToken, "secretkey", (err, userInfo) => {
+		if (err) return res.status(403).json("Token is not valid!");
+
+		const stories = pool.query(`SELECT s.*, name FROM stories AS s JOIN users AS u ON (u.id = s.userId)
+    LEFT JOIN relationships AS r ON (s.userId = r.followedUserId AND r.followerUserId= $1) LIMIT 4`, [userInfo.id])
+
+		if (stories.rows[0].length == 0) {
+			return res.status(409).json({
+				message: "Error while fetching the stories"
+			})
+		}
+
+		return res.status(200).json({ stories })
+	});
+};
+
+const addStory = (req, res) => {
+	const { img } = req.body;
+
 	const token = req.cookies.accessToken;
 	if (!token) return res.status(401).json("Not logged in!");
 
 	jwt.verify(token, "secretkey", (err, userInfo) => {
 		if (err) return res.status(403).json("Token is not valid!");
 
-		const q = `SELECT s.*, name FROM stories AS s JOIN users AS u ON (u.id = s.userId)
-    LEFT JOIN relationships AS r ON (s.userId = r.followedUserId AND r.followerUserId= ?) LIMIT 4`;
+		const createdAt = moment(Date.now()).format("YYYY-MM-DD HH:mm:ss")
 
-		pool.query(q, [userInfo.id], (err, data) => {
-			if (err) return res.status(500).json(err);
-			return res.status(200).json(data);
-		});
+		const story = pool.query(`INSERT INTO stories (img, createdAt, userId) VALUES ($1, $2, $3)`, [img, createdAt, userInfo.id]);
+
+		if (story.rows[0].length == 0) {
+			return res.status(400).json({
+				message: "Error while adding story"
+			})
+		}
+
+		return res.status(200).json({
+			message: "Story has been added"
+		})
 	});
 };
 
-export const addStory = (req, res) => {
+const deleteStory = (req, res) => {
+
+	const { id } = req.params.id
+
+	if (!id) {
+		return res.status(400).json({
+			message: "Id is required"
+		})
+	}
+
 	const token = req.cookies.accessToken;
 	if (!token) return res.status(401).json("Not logged in!");
 
 	jwt.verify(token, "secretkey", (err, userInfo) => {
 		if (err) return res.status(403).json("Token is not valid!");
 
-		const q = "INSERT INTO stories(`img`, `createdAt`, `userId`) VALUES (?)";
-		const values = [
-			req.body.img,
-			moment(Date.now()).format("YYYY-MM-DD HH:mm:ss"),
-			userInfo.id,
-		];
+		const deleteStory = pool.query(`DELETE FROM stories WHERE id = ($1) AND userId = ($2)`, [id, userInfo.id])
 
-		pool.query(q, [values], (err, data) => {
-			if (err) return res.status(500).json(err);
-			return res.status(200).json("Story has been created.");
-		});
+		if (deleteStory.affectedRows == 0) {
+			return res.status(500).json({
+				message: "Error while deleting the story."
+			})
+		}
+
+		return res.status(200).json({
+			message: "Story has been deleted."
+		})
 	});
 };
 
-export const deleteStory = (req, res) => {
-	const token = req.cookies.accessToken;
-	if (!token) return res.status(401).json("Not logged in!");
-
-	jwt.verify(token, "secretkey", (err, userInfo) => {
-		if (err) return res.status(403).json("Token is not valid!");
-
-		const q = "DELETE FROM stories WHERE `id`=? AND `userId` = ?";
-
-		pool.query(q, [req.params.id, userInfo.id], (err, data) => {
-			if (err) return res.status(500).json(err);
-			if (data.affectedRows > 0)
-				return res.status(200).json("Story has been deleted.");
-			return res.status(403).json("You can delete only your story!");
-		});
-	});
-};
+export default { addStory, getStories, deleteStory }
