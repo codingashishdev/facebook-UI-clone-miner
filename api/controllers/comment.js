@@ -1,7 +1,6 @@
 import { pool } from "../db.js";
 import jwt from "jsonwebtoken";
 import moment from "moment";
-import { add } from "nodemon/lib/rules/index.js";
 
 const getComments = async (req, res) => {
 	const comments = await pool.query(`SELECT c.*, u.id AS userId, name, profilePic FROM comments AS c JOIN users AS u ON (u.id = c.userId)
@@ -16,8 +15,8 @@ const getComments = async (req, res) => {
 	return res.status(200).json(comments.rows[0].data);
 };
 
-const addComment = async (req, res) => {
-	const { desc, userInfo, postId } = req.body;
+const addComment = (req, res) => {
+	const { desc, postId } = req.body;
 	const accessToken = req.cookies.accessToken;
 	if (!accessToken) return res.status(401).json("Not logged in!");
 
@@ -26,7 +25,7 @@ const addComment = async (req, res) => {
 
 		const createdAt = moment(Date.now()).format("YYYY-MM-DD HH:mm:ss");
 
-		const newComment = await pool.query(`INSERT INTO comments (desc, createdAt, userId, postId) VALUES ($1, $2, $3, $4) RETURNING userInfo`, [desc, createdAt, userInfo.id, postId])
+		const newComment = pool.query(`INSERT INTO comments (desc, createdAt, userId, postId) VALUES ($1, $2, $3, $4) RETURNING userInfo`, [desc, createdAt, userInfo.id, postId])
 
 		if (newComment.rows[0].length == 0) {
 			return res.status().json({

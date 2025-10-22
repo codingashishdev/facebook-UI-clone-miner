@@ -57,7 +57,7 @@ const login = async (req, res) => {
 
 		const user = await pool.query(`SELECT * FROM users WHERE username = $1`, [username])
 
-		if (user.rows.length == 0) {
+		if (user.rows[0].length == 0) {
 			return res.status().json({
 				message: "Invalid username or password"
 			})

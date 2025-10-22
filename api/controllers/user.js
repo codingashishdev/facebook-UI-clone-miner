@@ -1,42 +1,55 @@
 import jwt from "jsonwebtoken";
 import pool from "../db.js";
 
-export const getUser = (req, res) => {
-	const userId = req.params.userId;
-	const q = "SELECT * FROM users WHERE id=?";
+const getUser = (req, res) => {
+    const userId = req.params.userId;
+    const user = pool.query(`SELECT * FROM users WHERE id=$1`, [userId])
 
-	pool.query(q, [userId], (err, data) => {
-		if (err) return res.status(500).json(err);
-		const { password, ...info } = data[0];
-		return res.json(info);
-	});
+    if (user.rows[0].length == 0) {
+        return res.status(409).json({
+            message: "Error while fetching the user"
+        })
+    }
+
+    const { password, ...info } = user.rows[0];
+    return res.status(200).json({ info })
 };
 
-export const updateUser = (req, res) => {
-	const token = req.cookies.accessToken;
-	if (!token) return res.status(401).json("Not authenticated!");
+const updateUser = (req, res) => {
+    const { name, city, website, coverPic, profilePic } = req.body
 
-	jwt.verify(token, "secretkey", (err, userInfo) => {
-		if (err) return res.status(403).json("Token is not valid!");
+    if(!name || !city || !website || !coverPic || !profilePic){
+        return res.status(400).json({
+            message: "All the fields are required"
+        })
+    }
 
-		const q =
-			"UPDATE users SET `name`=?,`city`=?,`website`=?,`profilePic`=?,`coverPic`=? WHERE id=? ";
+    const token = req.cookies.accessToken;
+    if (!token) return res.status(401).json("Not authenticated!");
 
-		pool.query(
-			q,
-			[
-				req.body.name,
-				req.body.city,
-				req.body.website,
-				req.body.coverPic,
-				req.body.profilePic,
-				userInfo.id,
-			],
-			(err, data) => {
-				if (err) res.status(500).json(err);
-				if (data.affectedRows > 0) return res.json("Updated!");
-				return res.status(403).json("You can update only your post!");
-			}
-		);
-	});
+    jwt.verify(token, "secretkey", (err, userInfo) => {
+        if (err) return res.status(403).json("Token is not valid!");
+
+        const updatedUser = pool.query(`UPDATE users SET name=$1, city=$2, website=$3, profilePic=$4, coverPic=$5 WHERE id=$6`, [name, city, website, profilePic, coverPic, userInfo.id])    
+
+        if(updateUser.affectedRows == 0){
+            return res.status(500).json({
+                message: "error while updating the user"
+            })
+        }
+
+        if(updateUser.affectedRows > 0){
+            return res.status(200).json({
+                message: "Updated"
+            })
+        }
+        else{
+            return res.status(403).json({
+                message: "You can update only your post!"
+            })
+        }
+    });
 };
+
+
+export default { updateUser, getUser }
