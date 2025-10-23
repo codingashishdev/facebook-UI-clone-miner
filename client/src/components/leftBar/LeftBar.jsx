@@ -1,4 +1,3 @@
-import "./leftBar.scss";
 import Friends from "../../assets/1.png";
 import Groups from "../../assets/2.png";
 import Market from "../../assets/3.png";
@@ -16,84 +15,84 @@ import { AuthContext } from "../../context/authContext";
 import { useContext } from "react";
 
 const LeftBar = () => {
+    const { currentUser } = useContext(AuthContext);
 
-  const { currentUser } = useContext(AuthContext);
-
-  return (
-    <div className="leftBar">
-      <div className="container">
-        <div className="menu">
-          <div className="user">
-            <img
-              src={"/upload/" +currentUser.profilePic}
-              alt=""
-            />
-            <span>{currentUser.name}</span>
-          </div>
-          <div className="item">
-            <img src={Friends} alt="" />
-            <span>Friends</span>
-          </div>
-          <div className="item">
-            <img src={Groups} alt="" />
-            <span>Groups</span>
-          </div>
-          <div className="item">
-            <img src={Market} alt="" />
-            <span>Marketplace</span>
-          </div>
-          <div className="item">
-            <img src={Watch} alt="" />
-            <span>Watch</span>
-          </div>
-          <div className="item">
-            <img src={Memories} alt="" />
-            <span>Memories</span>
-          </div>
+    return (
+        <div className="flex-2 sticky top-[70px] h-[calc(100vh-70px)] overflow-scroll bg-light-bg dark:bg-dark-bg text-light-text dark:text-dark-text mobile:hidden [&::-webkit-scrollbar]:hidden">
+            <div className="p-5">
+                <div className="flex flex-col gap-5">
+                    <div className="flex items-center gap-[10px]">
+                        <img
+                            src={"/upload/" + currentUser.profilePic}
+                            alt=""
+                            className="w-[30px] h-[30px] rounded-full object-cover"
+                        />
+                        <span className="text-sm">{currentUser.name}</span>
+                    </div>
+                    <div className="flex items-center gap-[10px]">
+                        <img src={Friends} alt="" className="w-[30px]" />
+                        <span className="text-sm">Friends</span>
+                    </div>
+                    <div className="flex items-center gap-[10px]">
+                        <img src={Groups} alt="" className="w-[30px]" />
+                        <span className="text-sm">Groups</span>
+                    </div>
+                    <div className="flex items-center gap-[10px]">
+                        <img src={Market} alt="" className="w-[30px]" />
+                        <span className="text-sm">Marketplace</span>
+                    </div>
+                    <div className="flex items-center gap-[10px]">
+                        <img src={Watch} alt="" className="w-[30px]" />
+                        <span className="text-sm">Watch</span>
+                    </div>
+                    <div className="flex items-center gap-[10px]">
+                        <img src={Memories} alt="" className="w-[30px]" />
+                        <span className="text-sm">Memories</span>
+                    </div>
+                </div>
+                <hr className="my-5 border-none h-[0.5px] bg-light-border dark:bg-dark-border" />
+                <div className="flex flex-col gap-5">
+                    <span className="text-xs">Your shortcuts</span>
+                    <div className="flex items-center gap-[10px]">
+                        <img src={Events} alt="" className="w-[30px]" />
+                        <span className="text-sm">Events</span>
+                    </div>
+                    <div className="flex items-center gap-[10px]">
+                        <img src={Gaming} alt="" className="w-[30px]" />
+                        <span className="text-sm">Gaming</span>
+                    </div>
+                    <div className="flex items-center gap-[10px]">
+                        <img src={Gallery} alt="" className="w-[30px]" />
+                        <span className="text-sm">Gallery</span>
+                    </div>
+                    <div className="flex items-center gap-[10px]">
+                        <img src={Videos} alt="" className="w-[30px]" />
+                        <span className="text-sm">Videos</span>
+                    </div>
+                    <div className="flex items-center gap-[10px]">
+                        <img src={Messages} alt="" className="w-[30px]" />
+                        <span className="text-sm">Messages</span>
+                    </div>
+                </div>
+                <hr className="my-5 border-none h-[0.5px] bg-light-border dark:bg-dark-border" />
+                <div className="flex flex-col gap-5">
+                    <span className="text-xs">Others</span>
+                    <div className="flex items-center gap-[10px]">
+                        <img src={Fund} alt="" className="w-[30px]" />
+                        <span className="text-sm">Fundraiser</span>
+                    </div>
+                    <div className="flex items-center gap-[10px]">
+                        <img src={Tutorials} alt="" className="w-[30px]" />
+                        <span className="text-sm">Tutorials</span>
+                    </div>
+                    <div className="flex items-center gap-[10px]">
+                        <img src={Courses} alt="" className="w-[30px]" />
+                        <span className="text-sm">Courses</span>
+                    </div>
+                </div>
+            </div>
         </div>
-        <hr />
-        <div className="menu">
-          <span>Your shortcuts</span>
-          <div className="item">
-            <img src={Events} alt="" />
-            <span>Events</span>
-          </div>
-          <div className="item">
-            <img src={Gaming} alt="" />
-            <span>Gaming</span>
-          </div>
-          <div className="item">
-            <img src={Gallery} alt="" />
-            <span>Gallery</span>
-          </div>
-          <div className="item">
-            <img src={Videos} alt="" />
-            <span>Videos</span>
-          </div>
-          <div className="item">
-            <img src={Messages} alt="" />
-            <span>Messages</span>
-          </div>
-        </div>
-        <hr />
-        <div className="menu">
-          <span>Others</span>
-          <div className="item">
-            <img src={Fund} alt="" />
-            <span>Fundraiser</span>
-          </div>
-          <div className="item">
-            <img src={Tutorials} alt="" />
-            <span>Tutorials</span>
-          </div>
-          <div className="item">
-            <img src={Courses} alt="" />
-            <span>Courses</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+    );
 };
 
 export default LeftBar;

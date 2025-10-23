@@ -1,5 +1,5 @@
-import { pool } from "../db.js";
-import bcrypt from "bcrypt";
+import pool from "../db.js";
+import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
 const register = async (req, res) => {
@@ -34,7 +34,7 @@ const register = async (req, res) => {
 	} catch (error) {
 		//checking for any duplicate users
 		if (error.code === "23505") {
-			return res.status().json({
+			return res.status(409).json({
 				message: "Username already exists."
 			})
 		}
@@ -57,8 +57,8 @@ const login = async (req, res) => {
 
 		const user = await pool.query(`SELECT * FROM users WHERE username = $1`, [username])
 
-		if (user.rows[0].length == 0) {
-			return res.status().json({
+		if (user.rows.length === 0) {
+			return res.status(401).json({
 				message: "Invalid username or password"
 			})
 		}
@@ -71,7 +71,7 @@ const login = async (req, res) => {
 			})
 		}
 
-		const token = jwt.sign({ id: user.data[0].id }, "secretkey");
+		const token = jwt.sign({ id: user.rows[0].id }, process.env.JWT_SECRET || "secretkey");
 
 		res.cookie("accessToken", token, { httpOnly: true, })
 			.status(200)

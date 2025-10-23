@@ -1,5 +1,4 @@
 import Post from "../post/Post";
-import "./posts.scss";
 import { useQuery } from "@tanstack/react-query";
 import { makeRequest } from "../../axios";
 
@@ -11,7 +10,7 @@ const Posts = ({ userId }) => {
   );
 
   return (
-    <div className="posts">
+    <div className="flex flex-col gap-[50px]">
       {error
         ? "Something went wrong!"
         : isLoading

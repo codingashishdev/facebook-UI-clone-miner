@@ -1,4 +1,4 @@
-import { pool } from "../db.js";
+import pool from "../db.js";
 import jwt from "jsonwebtoken";
 import moment from "moment";
 

@@ -1,4 +1,3 @@
-import "./post.scss";
 import FavoriteBorderOutlinedIcon from "@mui/icons-material/FavoriteBorderOutlined";
 import FavoriteOutlinedIcon from "@mui/icons-material/FavoriteOutlined";
 import TextsmsOutlinedIcon from "@mui/icons-material/TextsmsOutlined";
@@ -60,32 +59,34 @@ const Post = ({ post }) => {
   };
 
   return (
-    <div className="post">
-      <div className="container">
-        <div className="user">
-          <div className="userInfo">
-            <img src={"/upload/" + post.profilePic} alt="" />
-            <div className="details">
+    <div className="shadow-[0px_0px_25px_-10px_rgba(0,0,0,0.38)] rounded-[20px] bg-light-bg dark:bg-dark-bg text-light-text dark:text-dark-text">
+      <div className="p-5">
+        <div className="flex items-center justify-between relative">
+          <div className="flex gap-5">
+            <img src={"/upload/" + post.profilePic} alt="" className="w-10 h-10 rounded-full object-cover" />
+            <div className="flex flex-col">
               <Link
                 to={`/profile/${post.userId}`}
                 style={{ textDecoration: "none", color: "inherit" }}
               >
-                <span className="name">{post.name}</span>
+                <span className="font-medium">{ post.name}</span>
               </Link>
-              <span className="date">{moment(post.createdAt).fromNow()}</span>
+              <span className="text-xs">{moment(post.createdAt).fromNow()}</span>
             </div>
           </div>
-          <MoreHorizIcon onClick={() => setMenuOpen(!menuOpen)} />
+          <MoreHorizIcon onClick={() => setMenuOpen(!menuOpen)} className="cursor-pointer" />
           {menuOpen && post.userId === currentUser.id && (
-            <button onClick={handleDelete}>delete</button>
+            <button onClick={handleDelete} className="absolute top-[30px] right-0 border-none bg-[#f0544f] px-[5px] py-[5px] cursor-pointer text-white">
+              delete
+            </button>
           )}
         </div>
-        <div className="content">
+        <div className="my-5">
           <p>{post.desc}</p>
-          <img src={"/upload/" + post.img} alt="" />
+          <img src={"/upload/" + post.img} alt="" className="w-full max-h-[500px] object-cover mt-5" />
         </div>
-        <div className="info">
-          <div className="item">
+        <div className="flex items-center gap-5">
+          <div className="flex items-center gap-[10px] cursor-pointer text-sm">
             {isLoading ? (
               "loading"
             ) : error ? (
@@ -100,11 +101,11 @@ const Post = ({ post }) => {
             )}
              {error ? "Error" : data?.length} Likes
           </div>
-          <div className="item" onClick={() => setCommentOpen(!commentOpen)}>
+          <div className="flex items-center gap-[10px] cursor-pointer text-sm" onClick={() => setCommentOpen(!commentOpen)}>
             <TextsmsOutlinedIcon />
             See Comments
           </div>
-          <div className="item">
+          <div className="flex items-center gap-[10px] cursor-pointer text-sm">
             <ShareOutlinedIcon />
             Share
           </div>

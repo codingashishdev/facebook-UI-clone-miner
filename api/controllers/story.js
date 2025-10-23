@@ -1,7 +1,6 @@
 import jwt from "jsonwebtoken";
 import moment from "moment";
-import { pool } from "../db.js";
-import { add } from "nodemon/lib/rules/index.js";
+import pool from "../db.js";
 
 const getStories = (req, res) => {
 	const accessToken = req.cookies.accessToken;

@@ -1,10 +1,11 @@
 import express from "express";
-import { getStories, addStory, deleteStory } from "../controllers/story.js";
+import storyController from "../controllers/story.js";
 
-const router = express.Router();
+const router = express.Router()
 
-router.get("/", getStories);
-router.post("/", addStory);
-router.delete("/:id", deleteStory);
+router.get("/", storyController.getStories)
+router.post("/", storyController.addStory)
+router.delete("/:id", storyController.deleteStory)
 
-export default router;
+
+export default router

@@ -11,7 +11,6 @@ import LeftBar from "./components/leftBar/LeftBar";
 import RightBar from "./components/rightBar/RightBar";
 import Home from "./pages/home/Home";
 import Profile from "./pages/profile/Profile";
-import "./style.scss";
 import { useContext } from "react";
 import { DarkModeContext } from "./context/darkModeContext";
 import { AuthContext } from "./context/authContext";
@@ -27,11 +26,11 @@ function App() {
   const Layout = () => {
     return (
       <QueryClientProvider client={queryClient}>
-        <div className={`theme-${darkMode ? "dark" : "light"}`}>
+        <div className={darkMode ? "dark" : ""}>
           <Navbar />
-          <div style={{ display: "flex" }}>
+          <div className="flex">
             <LeftBar />
-            <div style={{ flex: 6 }}>
+            <div className="flex-[6]">
               <Outlet />
             </div>
             <RightBar />

@@ -1,11 +1,11 @@
 import express from "express";
-import { getRelationships, addRelationship, deleteRelationship } from "../controllers/relationship.js";
+import relationshipController from "../controllers/relationship.js";
 
 const router = express.Router()
 
-router.get("/", getRelationships)
-router.post("/", addRelationship)
-router.delete("/", deleteRelationship)
+router.get("/", relationshipController.getRelationships)
+router.post("/", relationshipController.addRelationship)
+router.delete("/", relationshipController.deleteRelationship)
 
 
 export default router
