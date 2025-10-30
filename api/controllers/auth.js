@@ -2,8 +2,7 @@ import pool from "../db.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
-const register = async (req, res) => {
-
+const register = async (req, res) => {              
 	try {
 		const { username, email, password, name } = req.body;
 
@@ -13,17 +12,17 @@ const register = async (req, res) => {
 			})
 		}
 
-		const oldUser = await pool.query(`SELECT * FROM users WHERE username = ($1)`, [username])
+		const oldUser = await pool.query(`SELECT * FROM users WHERE username = $1`, [username])
 
-		if (oldUser) {
+		if (oldUser.rows.length > 0) {
 			return res.status(409).json({
 				message: "User already exists!!"
 			})
 		}
 
 		const saltRounds = 10;
-		const salt = bcrypt.genSaltSync(saltRounds)
-		const hashedPassword = bcrypt.hashSync(password, salt)
+		const salt = await bcrypt.genSaltSync(saltRounds)
+		const hashedPassword = await bcrypt.hashSync(password, salt)
 
 		const newUser = await pool.query(`INSERT INTO users (username, password, email, name) VALUES ($1, $2, $3, $4) RETURNING username`, [username, hashedPassword, email, name]);
 
@@ -32,13 +31,6 @@ const register = async (req, res) => {
 			username: newUser.rows[0].username
 		})
 	} catch (error) {
-		//checking for any duplicate users
-		if (error.code === "23505") {
-			return res.status(409).json({
-				message: "Username already exists."
-			})
-		}
-
 		res.status(500).json({
 			message: "Internal server error"
 		})
@@ -81,6 +73,7 @@ const login = async (req, res) => {
 				name: user.rows[0].name
 			});
 	} catch (error) {
+        console.log("Error while login, ", error)
 		res.status(500).json({
 			message: "Internal server error"
 		})

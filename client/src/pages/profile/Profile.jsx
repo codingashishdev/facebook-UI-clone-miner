@@ -22,19 +22,21 @@ const Profile = () => {
 
     const userId = parseInt(useLocation().pathname.split("/")[2]);
 
-    const { isLoading, data, error } = useQuery(["user", userId], () =>
-        makeRequest.get("/users/find/" + userId).then((res) => {
-            return res.data;
-        })
-    );
+    const { isLoading, data, error } = useQuery({
+        queryKey: ["user", userId],
+        queryFn: () =>
+            makeRequest.get("/users/find/" + userId).then((res) => {
+                return res.data;
+            }),
+    });
 
-    const { isLoading: rIsLoading, data: relationshipData } = useQuery(
-        ["relationship", userId],
-        () =>
+    const { isLoading: rIsLoading, data: relationshipData } = useQuery({
+        queryKey: ["relationship", userId],
+        queryFn: () =>
             makeRequest.get("/relationships?followedUserId=" + userId).then((res) => {
                 return res.data;
-            })
-    );
+            }),
+    });
 
     const queryClient = useQueryClient();
 

@@ -8,25 +8,25 @@ const Comments = ({ postId }) => {
     const [desc, setDesc] = useState("");
     const { currentUser } = useContext(AuthContext);
 
-    const { isLoading, error, data } = useQuery(["comments"], () =>
-        makeRequest.get("/comments?postId=" + postId).then((res) => {
-            return res.data;
-        })
-    );
+    const { isLoading, error, data } = useQuery({
+        queryKey: ["comments"],
+        queryFn: () =>
+            makeRequest.get("/comments?postId=" + postId).then((res) => {
+                return res.data;
+            }),
+    });
 
     const queryClient = useQueryClient();
 
-    const mutation = useMutation(
-        (newComment) => {
+    const mutation = useMutation({
+        mutationFn: (newComment) => {
             return makeRequest.post("/comments", newComment);
         },
-        {
-            onSuccess: () => {
-                // Invalidate and refetch
-                queryClient.invalidateQueries(["comments"]);
-            },
-        }
-    );
+        onSuccess: () => {
+            // Invalidate and refetch
+            queryClient.invalidateQueries(["comments"]);
+        },
+    });
 
     const handleClick = async (e) => {
         e.preventDefault();
